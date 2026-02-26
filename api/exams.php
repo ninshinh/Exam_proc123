@@ -71,24 +71,24 @@ function isScheduleBlocked(array $exam): bool {
     return false;
 }
 
-// ── Helper: auto-enforce schedule, deactivate/activate based on PHT time ─────
 function autoEnforceSchedule(PDO $db, array $exam): array {
     $now   = nowPHT();
     $start = toPHTTimestamp($exam['start_time']);
     $end   = toPHTTimestamp($exam['end_time']);
 
-    // If active/reopened but past end → auto-complete
+    // 1. Auto-complete (Past end time)
     if (($exam['status'] === 'active' || $exam['status'] === 'reopened') && $end && $now > $end) {
         $db->prepare("UPDATE exams SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
            ->execute([$exam['id']]);
-        $db->prepare("UPDATE exam_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP WHERE exam_id = ? AND status = 'active'")
-           ->execute([$exam['id']]);
         $exam['status'] = 'completed';
     }
-// 2. Modified Auto-activate: Only if NOT manually stopped
+    
+    // 2. SMART Auto-activate: Only if NOT manually stopped by teacher
     if ($exam['status'] === 'draft' && $start && $end && $now >= $start && $now <= $end) {
-        // Only auto-activate if the teacher hasn't manually killed it
-        if (!isset($exam['is_manually_stopped']) || $exam['is_manually_stopped'] == 0) {
+        // Fetch is_manually_stopped if it wasn't in the original array
+        $isStopped = $exam['is_manually_stopped'] ?? 0;
+        
+        if ($isStopped == 0) {
             $db->prepare("UPDATE exams SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
                ->execute([$exam['id']]);
             $exam['status'] = 'active';
