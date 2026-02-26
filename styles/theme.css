@@ -1,0 +1,151 @@
+/* ============================================================
+   I.T PROCTOOL — Shared Theme System
+   Light / Dark CSS custom properties + toggle button
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+/* ── Dark theme (default) ─────────────────────────── */
+:root,
+[data-theme="dark"] {
+  --bg-base:        #0c1528;
+  --bg-surface:     #111f36;
+  --bg-card:        rgba(17, 31, 54, 0.82);
+  --bg-card-hover:  rgba(22, 38, 64, 0.92);
+  --bg-input:       #0c1528;
+  --bg-overlay:     rgba(8, 14, 28, 0.85);
+
+  --border:         rgba(59, 96, 148, 0.30);
+  --border-focus:   rgba(59, 130, 246, 0.7);
+
+  --text-primary:   #e8f0fe;
+  --text-secondary: #94afd8;
+  --text-muted:     #5a7399;
+  --text-invert:    #0c1528;
+
+  --accent:         #3b82f6;
+  --accent-hover:   #2563eb;
+  --accent-light:   #60a5fa;
+  --accent-glow:    rgba(59, 130, 246, 0.25);
+
+  --success:        #10b981;
+  --danger:         #ef4444;
+  --warning:        #f59e0b;
+
+  --shadow-sm:      0 2px 8px rgba(0,0,0,0.35);
+  --shadow-md:      0 8px 32px rgba(0,0,0,0.45);
+  --shadow-lg:      0 20px 60px rgba(0,0,0,0.55);
+
+  --carousel-opacity: 0.22;
+  --overlay-gradient: linear-gradient(135deg,
+    rgba(8,14,28,0.97) 0%,
+    rgba(12,21,40,0.93) 55%,
+    rgba(8,14,28,0.97) 100%);
+}
+
+/* ── Light theme ──────────────────────────────────── */
+[data-theme="light"] {
+  /* Surfaces — muted blue-gray, easy on the eyes */
+  --bg-base:        #b8c7de;
+  --bg-surface:     #c4d2e6;
+  --bg-card:        rgba(195, 210, 230, 0.90);
+  --bg-card-hover:  rgba(188, 204, 226, 0.97);
+  --bg-input:       #aebdd4;
+  --bg-overlay:     rgba(170, 190, 215, 0.80);
+
+  --border:         rgba(60, 90, 140, 0.32);
+  --border-focus:   rgba(37, 99, 235, 0.65);
+
+  /* Text — deep dark for maximum readability on light surfaces */
+  --text-primary:   #030915;
+  --text-secondary: #091830;
+  --text-muted:     #152b48;
+  --text-invert:    #d8e2f0;
+
+  --accent:         #1a44c2;
+  --accent-hover:   #153799;
+  --accent-light:   #2563eb;
+  --accent-glow:    rgba(26, 68, 194, 0.22);
+
+  --success:        #064e3b;
+  --danger:         #7f1d1d;
+  --warning:        #78350f;
+
+  --shadow-sm:      0 2px 8px rgba(10,30,80,0.15);
+  --shadow-md:      0 8px 32px rgba(10,30,80,0.22);
+  --shadow-lg:      0 20px 60px rgba(10,30,80,0.30);
+
+  --carousel-opacity: 0.10;
+  --overlay-gradient: linear-gradient(135deg,
+    rgba(170,190,215,0.95) 0%,
+    rgba(180,200,225,0.90) 55%,
+    rgba(170,190,215,0.95) 100%);
+}
+
+/* ── Base resets ──────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  transition: background 0.3s, color 0.3s;
+  background: var(--bg-base);
+}
+
+body {
+  font-family: 'DM Sans', 'Segoe UI', sans-serif;
+  background: transparent;
+  color: var(--text-primary);
+  min-height: 100vh;
+  line-height: 1.6;
+  position: relative;
+}
+
+/* ── Theme Toggle Button ──────────────────────────── */
+.theme-toggle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+}
+.theme-toggle:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: rotate(15deg);
+}
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Show sun in dark, moon in light */
+[data-theme="light"] .icon-moon { display: block; }
+[data-theme="light"] .icon-sun  { display: none;  }
+[data-theme="dark"]  .icon-moon { display: none;  }
+[data-theme="dark"]  .icon-sun  { display: block; }
+
+/* ── Scrollbar ───────────────────────────────────── */
+::-webkit-scrollbar { width: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ── Transitions for theme switching ─────────────── */
+body, .card, .stat-card, .header, .btn, input, select, textarea,
+.exam-card, .tabs-nav, .tab-btn, .modal-overlay {
+  transition-property: background, background-color, border-color, color, box-shadow;
+  transition-duration: 0.25s;
+  transition-timing-function: ease;
+}

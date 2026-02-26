@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>I.T Proctool — Admin Login</title>
+  <link rel="stylesheet" href="../styles/theme.css"/>
+  <link rel="stylesheet" href="../styles/carousel.css"/>
+  <script>(function(){ const t=localStorage.getItem('proctool-theme')||'dark'; document.documentElement.setAttribute('data-theme',t); })();</script>
+  <style>
+    html, body { height: 100%; }
+    body { display: flex; flex-direction: column; overflow-x: hidden; }
+
+    .top-nav {
+      position: relative; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(8,14,28,0.6);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+    [data-theme="light"] .top-nav { background: rgba(248,250,253,0.75); }
+    .nav-logo { display: flex; align-items: center; gap: 0.65rem; text-decoration: none; color: var(--text-primary); }
+    .nav-logo-icon {
+      width: 36px; height: 36px;
+      background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.35);
+      border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #f87171;
+    }
+    .nav-logo-icon svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-logo-name { font-family: 'Sora', sans-serif; font-size: 1.15rem; font-weight: 700; letter-spacing: 0.04em; }
+
+    .login-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2.5rem 1.5rem; }
+
+    .login-card {
+      width: 100%; max-width: 420px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 2.25rem;
+      backdrop-filter: blur(20px); box-shadow: var(--shadow-md);
+    }
+
+    .admin-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.25);
+      border-radius: 9999px; padding: 0.28rem 0.85rem;
+      font-size: 0.7rem; font-weight: 700; color: #f87171;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 1.25rem;
+    }
+    .admin-eyebrow svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2; }
+
+    .card-title { font-family: 'Sora', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem; }
+    .card-sub { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.75rem; }
+
+    .form-label-pt { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.35rem; }
+    .input-pt {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text-primary); padding: 0.7rem 1rem;
+      font-size: 0.9rem; font-family: 'DM Sans', sans-serif; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box;
+    }
+    .input-pt:focus { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.15); }
+    .input-pt::placeholder { color: var(--text-muted); }
+    .input-pt.error { border-color: #ef4444; }
+    .form-row { margin-bottom: 0.9rem; }
+    .err-msg { font-size: 0.72rem; color: #f87171; margin-top: 0.3rem; display: none; }
+    .err-msg.show { display: block; }
+
+    .alert-box {
+      display: none; align-items: center; gap: 0.6rem;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 10px; padding: 0.75rem 1rem;
+      font-size: 0.82rem; color: #f87171; margin-bottom: 1.25rem;
+    }
+    .alert-box.show { display: flex; }
+    .alert-box svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; flex-shrink: 0; }
+
+    .btn-admin {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.85rem 1.5rem; background: #dc2626; color: #fff;
+      border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px rgba(220,38,38,0.3); margin-top: 0.25rem;
+    }
+    .btn-admin:hover { background: #b91c1c; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(220,38,38,0.35); }
+    .btn-admin:active { transform: translateY(0); }
+    .btn-admin:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+    .back-link { text-align: center; margin-top: 1.25rem; font-size: 0.8rem; color: var(--text-muted); }
+    .back-link a { color: #f87171; text-decoration: none; font-weight: 600; }
+    .back-link a:hover { text-decoration: underline; }
+
+    footer { text-align: center; padding: 1.25rem 2rem; font-size: 0.78rem; color: var(--text-muted); border-top: 1px solid var(--border); background: rgba(8,14,28,0.5); backdrop-filter: blur(8px); }
+    [data-theme="light"] footer { background: rgba(248,250,253,0.7); }
+
+    @media (max-width: 500px) { .login-card { padding: 1.5rem; } .top-nav { padding: 0.85rem 1.25rem; } }
+  </style>
+</head>
+<body>
+
+<div class="carousel-bg">
+  <div class="carousel-slide active" style="background-image:url('../photo1.jpg');"></div>
+  <div class="carousel-slide" style="background-image:url('../photo2.jpg');"></div>
+  <div class="carousel-slide" style="background-image:url('../photo3.jpg');"></div>
+</div>
+<div class="carousel-overlay"></div>
+
+<div class="page-content">
+<nav class="top-nav">
+  <a href="../index.html" class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <span class="nav-logo-name">I.T PROCTOOL</span>
+  </a>
+  <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+    <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</nav>
+
+<main class="login-main">
+  <div class="login-card">
+    <div class="admin-eyebrow">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Admin Access Only
+    </div>
+    <h2 class="card-title">Admin Portal</h2>
+    <p class="card-sub">Sign in to manage the exam system</p>
+
+    <div class="alert-box" id="loginError">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="loginErrorMsg">Invalid credentials</span>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="form-row">
+        <label class="form-label-pt">Email Address</label>
+        <input type="email" class="input-pt" id="email" placeholder="admin@cec.edu" autocomplete="username"/>
+        <span class="err-msg" id="emailErr">Please enter a valid email.</span>
+      </div>
+      <div class="form-row">
+        <label class="form-label-pt">Password</label>
+        <input type="password" class="input-pt" id="password" placeholder="••••••••" autocomplete="current-password"/>
+        <span class="err-msg" id="passErr">Password is required.</span>
+      </div>
+      <button type="submit" class="btn-admin" id="submitBtn">
+        <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Sign In to Admin Portal
+      </button>
+    </form>
+
+    <div class="back-link"><a href="../index.html">← Back to Main Portal</a></div>
+  </div>
+</main>
+
+<footer>Proverbs 16:28 — A fraudulent man sows strife, and a whisperer separates chief friends.</footer>
+
+<script>
+  // Carousel
+  let _s=0; const _sl=document.querySelectorAll('.carousel-slide');
+  if(_sl.length) setInterval(()=>{ _sl[_s].classList.remove('active'); _s=(_s+1)%_sl.length; _sl[_s].classList.add('active'); },6000);
+
+  // Theme toggle
+  document.getElementById('themeToggle').addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme')||'dark';
+    const next=cur==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    localStorage.setItem('proctool-theme',next);
+  });
+
+  if(sessionStorage.getItem('adminAuth')) window.location.href='dashboard.html';
+
+  const form=document.getElementById('loginForm');
+  const emailEl=document.getElementById('email');
+  const passEl=document.getElementById('password');
+  const loginError=document.getElementById('loginError');
+  const loginErrorMsg=document.getElementById('loginErrorMsg');
+  const submitBtn=document.getElementById('submitBtn');
+
+  function showErr(input,errEl){ input.classList.add('error'); errEl.classList.add('show'); }
+  function clearErr(input,errEl){ input.classList.remove('error'); errEl.classList.remove('show'); }
+
+  emailEl.addEventListener('input',()=>clearErr(emailEl,document.getElementById('emailErr')));
+  passEl.addEventListener('input',()=>clearErr(passEl,document.getElementById('passErr')));
+
+  form.addEventListener('submit', async(e)=>{
+    e.preventDefault();
+    loginError.classList.remove('show');
+    let valid=true;
+    const email=emailEl.value.trim();
+    const pass=passEl.value;
+    if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showErr(emailEl,document.getElementById('emailErr')); valid=false; }
+    if(!pass){ showErr(passEl,document.getElementById('passErr')); valid=false; }
+    if(!valid) return;
+
+    submitBtn.disabled=true;
+    submitBtn.innerHTML='Signing in…';
+    try{
+      const res=await fetch('../api/auth_admin.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+      const data=await res.json();
+      if(data.success){ sessionStorage.setItem('adminAuth',JSON.stringify(data.admin)); window.location.href='dashboard.html'; }
+      else{ loginError.classList.add('show'); loginErrorMsg.textContent=data.message||'Invalid credentials.'; }
+    }catch(err){
+      loginError.classList.add('show'); loginErrorMsg.textContent='Connection error. Check that the server is running.';
+    }finally{
+      submitBtn.disabled=false;
+      submitBtn.innerHTML='<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Sign In to Admin Portal';
+    }
+  });
+</script>
+</div><!-- .page-content -->
+
+<script src="../styles/carousel.js"></script>
+</body>
+</html>

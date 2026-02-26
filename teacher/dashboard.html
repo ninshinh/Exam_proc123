@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>I.T Proctool – Teacher Dashboard</title>
+<link rel="stylesheet" href="../styles/theme.css" />
+<link rel="stylesheet" href="../styles/carousel.css" />
+<link rel="stylesheet" href="../css/style.css" />
+<script>(function(){ const t=localStorage.getItem('proctool-theme')||'dark'; document.documentElement.setAttribute('data-theme',t); })();</script>
+<style>
+/* ─── Layout shell ─────────────────────────────────────────────────────────── */
+.shell { display:flex; min-height:calc(100vh - 58px); }
+
+/* ─── Sidebar ──────────────────────────────────────────────────────────────── */
+.sidebar {
+  width:218px; flex-shrink:0;
+  background:rgba(6,12,24,0.92);
+  border-right:1px solid rgba(255,255,255,0.05);
+  backdrop-filter:blur(16px);
+  display:flex; flex-direction:column;
+  padding:1rem 0.65rem 1.5rem;
+  position:sticky; top:58px; height:calc(100vh - 58px); overflow-y:auto;
+}
+.sb-group-label {
+  font-size:0.6rem; font-weight:700; letter-spacing:0.12em;
+  color:rgba(255,255,255,0.15); text-transform:uppercase;
+  padding:0.7rem 0.7rem 0.25rem; margin-top:0.5rem;
+}
+.sb-group-label:first-child { margin-top:0; }
+.sb-item {
+  display:flex; align-items:center; gap:0.65rem;
+  padding:0.6rem 0.75rem; border-radius:0.5rem;
+  border:none; background:transparent;
+  color:rgba(255,255,255,0.35); font-size:0.83rem; font-weight:500;
+  cursor:pointer; width:100%; text-align:left;
+  transition:background 0.15s, color 0.15s;
+  text-decoration:none; position:relative;
+}
+.sb-item:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.7); }
+.sb-item.active {
+  background:rgba(59,130,246,0.12);
+  color:#93c5fd;
+}
+.sb-item.active::before {
+  content:''; position:absolute; left:0; top:22%; bottom:22%;
+  width:3px; border-radius:0 3px 3px 0; background:#3b82f6;
+}
+.sb-item svg { width:15px; height:15px; flex-shrink:0; opacity:0.8; }
+.sb-item.active svg { opacity:1; }
+.sb-chip {
+  margin-left:auto; font-size:0.63rem; font-weight:700;
+  padding:0.06rem 0.45rem; border-radius:9999px;
+  background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.3);
+  min-width:20px; text-align:center;
+}
+.sb-chip.hot { background:rgba(239,68,68,0.15); color:#fca5a5; }
+
+/* ─── Main panel ───────────────────────────────────────────────────────────── */
+.main-panel { flex:1; min-width:0; display:flex; flex-direction:column; }
+
+/* ─── Stats bar ────────────────────────────────────────────────────────────── */
+.stats-bar {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:0.85rem; padding:1.4rem 1.75rem 0;
+}
+.stat-tile {
+  background:rgba(10,20,40,0.7); border:1px solid rgba(255,255,255,0.06);
+  border-radius:0.75rem; padding:1rem 1.15rem;
+  display:flex; align-items:center; gap:0.9rem;
+  backdrop-filter:blur(8px);
+}
+.stat-ico {
+  width:40px; height:40px; border-radius:0.55rem; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.stat-ico.green { background:rgba(16,185,129,0.1); color:#34d399; }
+.stat-ico.blue  { background:rgba(59,130,246,0.1);  color:#60a5fa; }
+.stat-ico.red   { background:rgba(239,68,68,0.1);   color:#f87171; }
+.stat-ico svg   { width:18px; height:18px; }
+.stat-num  { font-size:1.65rem; font-weight:700; color:#f8fafc; line-height:1; }
+.stat-lbl  { font-size:0.68rem; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.07em; font-weight:600; margin-top:0.18rem; }
+
+/* ─── Section panels ───────────────────────────────────────────────────────── */
+.section { display:none; flex:1; padding:1.4rem 1.75rem 2rem; }
+.section.active { display:block; }
+.section-head {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  margin-bottom:1.1rem;
+}
+.section-head h2 { font-size:0.98rem; font-weight:700; color:#f1f5f9; }
+.section-head .sub { font-size:0.75rem; color:rgba(255,255,255,0.25); margin-top:0.15rem; }
+
+/* ─── Quick bar ────────────────────────────────────────────────────────────── */
+.quick-bar {
+  display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;
+  background:rgba(10,20,40,0.6); border:1px solid rgba(255,255,255,0.06);
+  border-radius:0.65rem; padding:0.85rem 1rem; margin-bottom:1.2rem;
+}
+
+/* ─── Exam cards ───────────────────────────────────────────────────────────── */
+.exam-list { display:flex; flex-direction:column; gap:0.55rem; }
+.exam-card {
+  display:flex; align-items:stretch;
+  background:rgba(10,20,40,0.75); border:1px solid rgba(255,255,255,0.06);
+  border-radius:0.75rem; transition:border-color 0.2s, box-shadow 0.2s;
+}
+.exam-card:hover { border-color:rgba(255,255,255,0.12); box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+.ec-bar  { width:4px; flex-shrink:0; border-radius:0.75rem 0 0 0.75rem; }
+.ec-body { flex:1; min-width:0; padding:0.82rem 0.9rem 0.82rem 0.85rem; }
+.ec-row1 { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.18rem; }
+.ec-name { font-weight:700; font-size:0.92rem; color:#f1f5f9; }
+.ec-pill {
+  display:inline-flex; align-items:center; gap:0.22rem;
+  padding:0.1rem 0.48rem; border-radius:9999px;
+  font-size:0.62rem; font-weight:700; letter-spacing:0.05em;
+  border:1px solid transparent;
+}
+.ec-hint { font-size:0.7rem; color:rgba(255,255,255,0.2); margin-bottom:0.3rem; }
+.ec-desc { font-size:0.79rem; color:rgba(255,255,255,0.3); margin-bottom:0.42rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ec-foot { display:flex; gap:0.45rem; align-items:center; }
+.ec-code {
+  background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08);
+  border-radius:0.28rem; padding:0.12rem 0.48rem;
+  font-family:monospace; font-size:0.74rem; color:#60a5fa;
+}
+.ec-date { font-size:0.7rem; color:rgba(255,255,255,0.2); }
+.ec-actions { padding:0.45rem 0.45rem 0 0; }
+.ec-btn {
+  background:none; border:none; color:rgba(255,255,255,0.2); cursor:pointer;
+  width:28px; height:28px; border-radius:0.35rem;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.1rem; transition:background 0.12s, color 0.12s;
+}
+.ec-btn:hover { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.7); }
+
+/* ─── Dropdown ─────────────────────────────────────────────────────────────── */
+.dd-menu {
+  position:fixed; z-index:9000;
+  background:#08121f; border:1px solid rgba(255,255,255,0.08);
+  border-radius:0.6rem; min-width:195px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.8);
+  animation:ddpop 0.1s ease;
+}
+@keyframes ddpop { from{opacity:0;transform:translateY(-5px)} to{opacity:1;transform:translateY(0)} }
+.dd-item {
+  display:flex; align-items:center; gap:0.6rem;
+  padding:0.6rem 0.9rem; font-size:0.82rem; font-weight:500;
+  color:rgba(255,255,255,0.35); cursor:pointer;
+  border:none; background:none; width:100%; text-align:left;
+  transition:background 0.1s, color 0.1s;
+}
+.dd-item:hover { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.8); }
+.dd-item.g { color:#34d399; } .dd-item.g:hover { background:rgba(52,211,153,0.07); }
+.dd-item.a { color:#fbbf24; } .dd-item.a:hover { background:rgba(251,191,36,0.07); }
+.dd-item.r { color:#f87171; } .dd-item.r:hover { background:rgba(248,113,113,0.07); }
+.dd-item.m { color:rgba(255,255,255,0.25); } .dd-item.m:hover { background:rgba(255,255,255,0.04); }
+.dd-sep { height:1px; background:rgba(255,255,255,0.06); margin:0.18rem 0; }
+
+/* ── Live pulse ───────────────────────────────────────────────────────────── */
+.live-badge {
+  display:inline-flex; align-items:center; gap:0.45rem;
+  font-size:0.73rem; color:#34d399; font-weight:500;
+}
+.live-dot {
+  width:7px; height:7px; border-radius:50%; background:#10b981; position:relative;
+}
+.live-dot::after {
+  content:''; position:absolute; inset:-3px; border-radius:50%;
+  background:#10b981; opacity:0.3; animation:livepulse 1.5s infinite;
+}
+@keyframes livepulse { 0%,100%{transform:scale(1);opacity:0.3;} 50%{transform:scale(1.6);opacity:0;} }
+
+/* ─── Search / filter row ──────────────────────────────────────────────────── */
+.filter-row { display:flex; gap:0.65rem; margin-bottom:1rem; flex-wrap:wrap; }
+.filter-row .search-wrap { flex:1; min-width:160px; }
+.filter-input {
+  background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08);
+  border-radius:0.5rem; padding:0.58rem 0.75rem 0.58rem 2.2rem;
+  color:#e2e8f0; font-size:0.83rem; width:100%; outline:none;
+  transition:border-color 0.2s;
+}
+.filter-input:focus { border-color:rgba(59,130,246,0.4); }
+.filter-select {
+  padding:0.55rem 0.8rem; background:rgba(0,0,0,0.4);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:0.5rem; color:rgba(255,255,255,0.45); font-size:0.83rem;
+  cursor:pointer; outline:none;
+}
+
+/* ─── Session cards (Activity Log) ────────────────────────────────────────── */
+.session-list { display:flex; flex-direction:column; gap:0.55rem; }
+.sess-card {
+  background:rgba(10,20,40,0.75); border:1px solid rgba(255,255,255,0.06);
+  border-radius:0.75rem; overflow:hidden; cursor:pointer;
+  transition:border-color 0.2s;
+}
+.sess-card:hover, .sess-card.open { border-color:rgba(59,130,246,0.3); }
+.sess-top {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.8rem 1.05rem; gap:0.85rem;
+}
+.sess-left { display:flex; align-items:center; gap:0.75rem; min-width:0; }
+.sess-avatar {
+  width:34px; height:34px; border-radius:50%;
+  background:rgba(59,130,246,0.08); border:1px solid rgba(255,255,255,0.08);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:0.82rem; color:#60a5fa; flex-shrink:0;
+}
+.sess-name { font-weight:600; font-size:0.875rem; color:#e2e8f0; }
+.sess-meta { font-size:0.72rem; color:rgba(255,255,255,0.25); margin-top:0.08rem; }
+.sess-code {
+  font-family:monospace; font-size:0.7rem; color:#60a5fa;
+  background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.08);
+  border-radius:0.25rem; padding:0.08rem 0.4rem;
+}
+.sess-expand {
+  background:rgba(0,0,0,0.25); border-top:1px solid rgba(255,255,255,0.05);
+  padding:0.8rem 1.05rem; display:none;
+}
+.sess-card.open .sess-expand { display:block; }
+.sess-done { opacity:0.55; }
+.sess-done .sess-avatar { background:rgba(100,116,139,0.12); color:#64748b; border-color:rgba(255,255,255,0.05); }
+.badge-done {
+  display:inline-flex; align-items:center; gap:0.3rem;
+  background:rgba(100,116,139,0.1); color:#64748b;
+  border:1px solid rgba(100,116,139,0.2); border-radius:9999px;
+  padding:0.2rem 0.6rem; font-size:0.73rem; font-weight:600;
+}
+.expand-label {
+  font-size:0.65rem; font-weight:700; letter-spacing:0.09em;
+  color:rgba(255,255,255,0.2); text-transform:uppercase; margin-bottom:0.6rem;
+}
+.viol-entry {
+  display:flex; gap:0.65rem;
+  background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.06);
+  border-radius:0.45rem; padding:0.6rem 0.8rem; margin-bottom:0.4rem;
+}
+.viol-type-tag {
+  background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15);
+  color:#fca5a5; font-family:monospace; font-size:0.67rem;
+  padding:0.08rem 0.4rem; border-radius:0.28rem;
+  white-space:nowrap; align-self:flex-start; flex-shrink:0;
+}
+.viol-entry-desc { font-size:0.79rem; color:rgba(255,255,255,0.45); }
+.viol-entry-time { font-size:0.68rem; color:rgba(255,255,255,0.18); margin-top:0.18rem; }
+
+/* ─── Violations log ───────────────────────────────────────────────────────── */
+.viol-row {
+  display:flex; align-items:flex-start; gap:0.9rem;
+  background:rgba(10,20,40,0.75); border:1px solid rgba(255,255,255,0.06);
+  border-radius:0.7rem; padding:0.82rem 1rem; margin-bottom:0.45rem;
+  transition:border-color 0.15s;
+}
+.viol-row:hover { border-color:rgba(255,255,255,0.1); }
+.viol-left { flex:1; min-width:0; }
+.viol-student { font-weight:600; font-size:0.875rem; color:#e2e8f0; }
+.viol-exam-lbl { font-size:0.73rem; color:rgba(255,255,255,0.25); margin-top:0.05rem; }
+.viol-tags { display:flex; gap:0.38rem; flex-wrap:wrap; margin-top:0.38rem; align-items:center; }
+.viol-tag-type {
+  font-family:monospace; font-size:0.67rem;
+  background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15);
+  color:#fca5a5; padding:0.08rem 0.44rem; border-radius:0.28rem;
+}
+.sev-badge { display:inline-flex; align-items:center; padding:0.07rem 0.44rem;
+  border-radius:9999px; font-size:0.64rem; font-weight:700; border:1px solid transparent; }
+.sev-badge.high   { background:rgba(239,68,68,0.1);  color:#f87171; border-color:rgba(239,68,68,0.2); }
+.sev-badge.medium { background:rgba(245,158,11,0.1); color:#fbbf24; border-color:rgba(245,158,11,0.2); }
+.sev-badge.low    { background:rgba(59,130,246,0.1); color:#60a5fa; border-color:rgba(59,130,246,0.2); }
+.viol-desc-text { font-size:0.81rem; color:rgba(255,255,255,0.35); margin-top:0.32rem; }
+.viol-right { text-align:right; flex-shrink:0; }
+.viol-time { font-size:0.73rem; color:rgba(255,255,255,0.2); font-family:monospace; }
+.viol-id   { font-size:0.65rem; color:rgba(255,255,255,0.12); margin-top:0.1rem; }
+
+/* ─── Empty states ─────────────────────────────────────────────────────────── */
+.empty-box { padding:3.5rem 1rem; text-align:center; color:rgba(255,255,255,0.2); }
+.empty-box .ei { font-size:2.5rem; margin-bottom:0.75rem; opacity:0.35; }
+.empty-box h3 { color:rgba(255,255,255,0.3); font-size:0.92rem; margin-bottom:0.3rem; }
+.empty-box p  { font-size:0.78rem; }
+
+/* ─── Exam card timing row ─────────────────────────────────────────────────── */
+.ec-timing {
+  display:flex; flex-wrap:wrap; gap:0.35rem; align-items:center;
+  margin-bottom:0.42rem;
+}
+.ec-time-chip {
+  display:inline-flex; align-items:center; gap:0.32rem;
+  background:rgba(59,130,246,0.07); border:1px solid rgba(59,130,246,0.14);
+  border-radius:0.35rem; padding:0.18rem 0.55rem;
+}
+.ec-time-chip-end {
+  background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.15);
+}
+.ec-time-lbl {
+  font-size:0.6rem; font-weight:700; letter-spacing:0.05em;
+  text-transform:uppercase; color:rgba(255,255,255,0.25);
+}
+.ec-time-val {
+  font-size:0.74rem; font-weight:600; color:#93c5fd; font-family:monospace;
+}
+.ec-time-chip-end .ec-time-val { color:#fca5a5; }
+
+/* ─── Exam card inline edit btn ────────────────────────────────────────────── */
+.ec-btn-edit { color:rgba(255,255,255,0.2); }
+.ec-btn-edit:hover { background:rgba(59,130,246,0.12); color:#60a5fa; }
+
+/* ─── Session card times row ───────────────────────────────────────────────── */
+.sess-times-row {
+  display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;
+  margin-bottom:0.22rem; margin-top:0.1rem;
+}
+.sess-time-block {
+  display:inline-flex; align-items:baseline; gap:0.28rem;
+  background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.07);
+  border-radius:0.3rem; padding:0.15rem 0.5rem;
+}
+.sess-time-lbl {
+  font-size:0.6rem; font-weight:700; letter-spacing:0.05em;
+  text-transform:uppercase; color:rgba(255,255,255,0.25);
+}
+.sess-time-val {
+  font-size:0.8rem; font-weight:700; color:#93c5fd; font-family:monospace;
+}
+.sess-done .sess-time-val { color:rgba(100,116,139,0.8); }
+.sess-time-sep {
+  font-size:0.72rem; color:rgba(255,255,255,0.18); padding:0 0.1rem;
+}
+
+
+@media(max-width:860px) {
+  .sidebar { width:175px; }
+  .main-panel { padding:0; }
+  .stats-bar, .section { padding-left:1.1rem; padding-right:1.1rem; }
+}
+@media(max-width:640px) {
+  .shell { flex-direction:column; }
+  .sidebar { width:100%; height:auto; position:static; flex-direction:row;
+    flex-wrap:nowrap; padding:0.4rem 0.5rem; overflow-x:auto; gap:0; }
+  .sb-group-label { display:none; }
+  .sb-item { flex-direction:column; gap:0.18rem; font-size:0.68rem;
+    padding:0.45rem 0.55rem; border-radius:0.4rem; }
+  .sb-chip { display:none; }
+  .stats-bar { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="toast-container"></div>
+
+<div class="carousel-bg">
+  <div class="carousel-slide active" style="background-image:url('../photo1.jpg');"></div>
+  <div class="carousel-slide" style="background-image:url('../photo2.jpg');"></div>
+  <div class="carousel-slide" style="background-image:url('../photo3.jpg');"></div>
+</div>
+<div class="carousel-overlay"></div>
+
+<div class="page-content">
+
+<!-- ══ Header ══ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg class="icon" style="width:20px;height:20px;" viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-title">I.T Proctool
+          <span style="font-size:0.68rem;color:#60a5fa;font-weight:400;letter-spacing:0.1em;text-transform:uppercase;">Teacher</span>
+        </div>
+        <div class="logo-sub" id="teacher-info">Loading…</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+      <span id="refresh-indicator" style="font-size:0.7rem;color:rgba(255,255,255,0.15);"></span>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <svg class="icon-sun" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="5"/>
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btn-change-password" title="Change Password" style="color:rgba(255,255,255,0.4);">
+        <svg class="icon" viewBox="0 0 24 24">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        Password
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btn-logout" style="color:rgba(255,255,255,0.4);">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Logout
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ══ Loading ══ -->
+<div id="loading-state" style="display:flex;align-items:center;justify-content:center;height:70vh;flex-direction:column;gap:1rem;">
+  <div class="spinner"></div>
+  <p style="color:rgba(255,255,255,0.25);font-size:0.85rem;">Initializing Dashboard…</p>
+</div>
+
+<!-- ══ Dashboard ══ -->
+<div id="dashboard-content" class="hidden">
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sb-group-label">Overview</div>
+    <button class="sb-item active" data-section="exams">
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      Teacher Logs
+      <span class="sb-chip" id="chip-exams">0</span>
+    </button>
+
+    <div class="sb-group-label">Tool</div>
+    <button class="sb-item" data-section="activity">
+      <svg class="icon" viewBox="0 0 24 24">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Activity Log
+      <span class="sb-chip" id="chip-sessions">0</span>
+    </button>
+    <span id="chip-violations" style="display:none;">0</span>
+
+    <div class="sb-group-label">Links</div>
+    <a class="sb-item"
+       href="https://docs.google.com/spreadsheets/d/1scFoeGZZheTOPCM9eh38thM0mLSY6fU0RgWLrZXk1iY/edit?gid=0#gid=0"
+       target="_blank">
+      <svg class="icon" viewBox="0 0 24 24" style="color:#34d399;">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      Check Sheet
+    </a>
+  </aside>
+
+  <!-- Main -->
+  <div class="main-panel">
+
+    <!-- Stats bar -->
+    <div class="stats-bar">
+      <div class="stat-tile">
+        <div class="stat-ico green">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+          <div class="stat-num" id="stat-active">0</div>
+          <div class="stat-lbl">Active Exams</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-ico blue">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-num" id="stat-sessions">0</div>
+          <div class="stat-lbl">Students</div>
+        </div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-ico red">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div>
+          <div class="stat-num" id="stat-violations">0</div>
+          <div class="stat-lbl">Violations</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SECTION: My Exams ══ -->
+    <div id="section-exams" class="section active">
+      <div class="quick-bar">
+        <button class="btn btn-primary btn-sm" id="btn-open-create">
+          <svg class="icon" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          New Exam
+        </button>
+        <span style="font-size:0.8rem;color:rgba(255,255,255,0.2);">
+          Create an exam · students enter using the code
+        </span>
+      </div>
+      <div class="section-head">
+        <div>
+          <h2>Exam Sessions</h2>
+          <div class="sub">Click ••• on a card to activate, deactivate, or delete</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.65rem;">
+          <div class="live-badge">
+            <div class="live-dot"></div>
+          </div>
+          <span style="font-size:0.78rem;color:rgba(255,255,255,0.25);">Auto-refresh 1 min</span>
+          <button class="btn btn-ghost btn-sm" id="btn-refresh-exams"
+            style="color:rgba(255,255,255,0.35);font-size:0.78rem;">
+            <svg class="icon" id="exams-refresh-icon" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+      <div class="exam-list" id="exams-list"></div>
+    </div>
+
+    <!-- ══ SECTION: Activity Log ══ -->
+    <div id="section-activity" class="section">
+      <div class="section-head">
+        <div>
+          <h2>Activity Log</h2>
+          <div class="sub">Active &amp; completed sessions · Auto-refresh 1 min</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.65rem;">
+          <div class="live-badge">
+            <div class="live-dot"></div>
+            
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-manual-refresh"
+            style="color:rgba(255,255,255,0.35);font-size:0.78rem;">
+            <svg class="icon" viewBox="0 0 24 24">
+              <polyline points="23 4 23 10 17 10"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="search-wrap">
+          <svg class="icon search-icon" viewBox="0 0 24 24" style="width:14px;height:14px;">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="filter-input" type="text" id="session-search"
+            placeholder="Search student or exam code…" />
+        </div>
+      </div>
+      <div class="session-list" id="sessions-list"></div>
+    </div>
+
+    <!-- ══ SECTION: Violations ══ -->
+    <div id="section-violations" class="section">
+      <div class="section-head">
+        <div>
+          <h2>Violations Log</h2>
+          <div class="sub">All violations recorded across your exams</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-refresh-violations"
+          style="color:rgba(255,255,255,0.3);font-size:0.78rem;">
+          <svg class="icon" viewBox="0 0 24 24">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          Refresh
+        </button>
+      </div>
+      <div class="filter-row">
+        <div class="search-wrap" style="flex:1;">
+          <svg class="icon search-icon" viewBox="0 0 24 24" style="width:14px;height:14px;">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input class="filter-input" type="text" id="violation-search"
+            placeholder="Search student, exam, or violation type…" />
+        </div>
+        <select class="filter-select" id="severity-filter">
+          <option value="all">All Severities</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div id="violations-list"></div>
+    </div>
+
+  </div><!-- .main-panel -->
+</div><!-- .shell -->
+</div><!-- #dashboard-content -->
+
+<!-- ══ Change Password Modal ══ -->
+<div id="modal-change-password" class="modal-overlay hidden">
+  <div class="modal" style="max-width:400px;">
+    <h2 style="margin-bottom:0.2rem;">Change Password</h2>
+    <p class="subtitle">Enter your current password and choose a new one</p>
+    <div class="form-group">
+      <label>Current Password</label>
+      <input id="cp-current" type="password" placeholder="Your current password" />
+    </div>
+    <div class="form-group">
+      <label>New Password</label>
+      <input id="cp-new" type="password" placeholder="At least 6 characters" />
+    </div>
+    <div class="form-group">
+      <label>Confirm New Password</label>
+      <input id="cp-confirm" type="password" placeholder="Repeat new password" />
+    </div>
+    <div style="display:flex;gap:0.6rem;margin-top:1rem;">
+      <button class="btn btn-primary" style="flex:1;" id="btn-save-password">Save Password</button>
+      <button class="btn btn-ghost" id="btn-cancel-password">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Create Exam Modal ══ -->
+<div id="modal-create-exam" class="modal-overlay hidden">
+  <div class="modal cem-modal" style="max-width:480px;padding:0;overflow:hidden;">
+
+    <!-- Header -->
+    <div class="cem-header">
+      <div class="cem-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+        </svg>
+      </div>
+      <div>
+        <h2 class="cem-title">Create New Exam</h2>
+        <p class="cem-sub">Students enter using the exam code you set</p>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="cem-body">
+
+      <!-- Exam Code -->
+      <div class="cem-field">
+        <label class="cem-label">
+          Exam Code
+          <span class="cem-required">required</span>
+        </label>
+        <div class="cem-code-wrap">
+          <input id="exam-title" type="text" class="cem-input cem-code-input"
+            placeholder="E.G. MATH101"
+            style="text-transform:uppercase;font-weight:700;letter-spacing:0.08em;" />
+        </div>
+        <p class="cem-hint">Becomes the sheet tab name &amp; student access code</p>
+      </div>
+
+      <!-- Description -->
+      <div class="cem-field">
+        <label class="cem-label">Description <span class="cem-optional">optional</span></label>
+        <textarea id="exam-desc" class="cem-input cem-textarea"
+          rows="2" placeholder="Brief description or instructions…"></textarea>
+      </div>
+
+      <!-- Time row -->
+      <div class="cem-time-row">
+        <div class="cem-field">
+          <label class="cem-label">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Start Time
+          </label>
+          <input id="exam-start" type="datetime-local" class="cem-input" />
+        </div>
+        <div class="cem-time-divider">→</div>
+        <div class="cem-field">
+          <label class="cem-label">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            End Time
+            <span class="cem-optional">auto-completes</span>
+          </label>
+          <input id="exam-end" type="datetime-local" class="cem-input" />
+        </div>
+      </div>
+
+    </div><!-- .cem-body -->
+
+    <!-- Footer -->
+    <div class="cem-footer">
+      <button class="btn btn-ghost cem-cancel" id="btn-cancel-create">Cancel</button>
+      <button class="btn btn-primary cem-submit" id="btn-create-exam">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create Exam
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<style>
+/* ── Create Exam Modal ───────────────────────────────────────────────────── */
+.cem-modal { border:1px solid rgba(255,255,255,0.07) !important; }
+
+.cem-header {
+  display:flex; align-items:center; gap:1rem;
+  padding:1.4rem 1.6rem 1.2rem;
+  background:linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(6,12,24,0) 100%);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.cem-header-icon {
+  width:42px; height:42px; border-radius:0.6rem; flex-shrink:0;
+  background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.2);
+  display:flex; align-items:center; justify-content:center;
+  color:#60a5fa;
+}
+.cem-header-icon svg { width:20px; height:20px; }
+.cem-title { font-size:1.05rem; font-weight:700; color:#f1f5f9; margin:0 0 0.1rem; }
+.cem-sub { font-size:0.76rem; color:rgba(255,255,255,0.3); margin:0; }
+
+.cem-body { padding:1.3rem 1.6rem; display:flex; flex-direction:column; gap:1rem; }
+
+.cem-field { display:flex; flex-direction:column; gap:0.3rem; }
+.cem-label {
+  font-size:0.72rem; font-weight:600; letter-spacing:0.06em;
+  text-transform:uppercase; color:rgba(255,255,255,0.35);
+  display:flex; align-items:center; gap:0.4rem;
+}
+.cem-required {
+  font-size:0.6rem; font-weight:700; letter-spacing:0.06em;
+  background:rgba(239,68,68,0.1); color:#f87171;
+  border:1px solid rgba(239,68,68,0.2); border-radius:9999px;
+  padding:0.05rem 0.45rem; text-transform:uppercase;
+}
+.cem-optional {
+  font-size:0.6rem; font-weight:600; letter-spacing:0.05em;
+  background:rgba(100,116,139,0.1); color:#64748b;
+  border:1px solid rgba(100,116,139,0.15); border-radius:9999px;
+  padding:0.05rem 0.4rem; text-transform:uppercase;
+}
+.cem-input {
+  background:rgba(0,0,0,0.35) !important;
+  border:1px solid rgba(255,255,255,0.07) !important;
+  border-radius:0.5rem !important;
+  color:#e2e8f0 !important;
+  padding:0.65rem 0.85rem !important;
+  font-size:0.875rem !important;
+  width:100%; outline:none;
+  transition:border-color 0.15s, box-shadow 0.15s;
+}
+.cem-input:focus {
+  border-color:rgba(59,130,246,0.4) !important;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.07) !important;
+}
+.cem-input::placeholder { color:rgba(255,255,255,0.15) !important; }
+.cem-code-input { font-size:1rem !important; padding:0.7rem 0.9rem !important; }
+.cem-textarea { resize:none !important; min-height:68px !important; font-family:inherit !important; }
+
+.cem-time-row {
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:end; gap:0.6rem;
+  min-width:0;
+}
+.cem-time-row .cem-field { min-width:0; overflow:hidden; }
+.cem-time-row .cem-input { min-width:0; width:100%; box-sizing:border-box; }
+.cem-time-divider {
+  color:rgba(255,255,255,0.15); font-size:1rem; padding-bottom:0.65rem;
+  align-self:end; text-align:center;
+}
+
+/* datetime-local calendar icon color */
+.cem-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter:invert(0.4); cursor:pointer;
+}
+
+.cem-hint {
+  font-size:0.7rem; color:rgba(255,255,255,0.2); margin:0;
+}
+
+.cem-footer {
+  display:flex; align-items:center; justify-content:flex-end; gap:0.6rem;
+  padding:1rem 1.6rem 1.3rem;
+  border-top:1px solid rgba(255,255,255,0.05);
+  background:rgba(0,0,0,0.15);
+}
+.cem-cancel { font-size:0.83rem; padding:0.6rem 1.1rem; }
+.cem-submit { font-size:0.875rem; padding:0.65rem 1.4rem; gap:0.45rem; }
+.cem-submit:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(59,130,246,0.3); }
+.cem-submit { transition:all 0.15s; }
+</style>
+
+<!-- ══ Whitelist Modal ══ -->
+<div id="modal-whitelist" class="modal-overlay hidden">
+  <div class="modal" style="max-width:520px;">
+    <h2 style="margin-bottom:0.2rem;">🔒 Student Whitelist</h2>
+    <p class="subtitle">Exam: <strong id="whitelist-exam-title">—</strong></p>
+    <p style="font-size:0.82rem;color:#94a3b8;margin-bottom:1rem;">
+      Enter last names of students allowed to take this exam (one per line). If the list is empty, all students with the correct exam code can enter.
+    </p>
+    <div class="form-group">
+      <label>Allowed Students <span style="font-size:0.73rem;color:#64748b;">(first name + last name, case-insensitive)</span></label>
+      <textarea id="whitelist-names" rows="8" placeholder="Dela Cruz, Juan&#10;Santos, Maria&#10;Garcia&#10;Reyes, Jose" style="font-family:monospace;font-size:0.88rem;"></textarea>
+      <div class="form-hint">One student per line. Format: "LastName, FirstName" or just "LastName". Leave blank to allow everyone with the exam code.</div>
+    </div>
+    <div style="display:flex;gap:0.6rem;margin-top:1rem;">
+      <button class="btn btn-primary" style="flex:1;" id="btn-save-whitelist">Save Whitelist</button>
+      <button class="btn btn-ghost" id="btn-cancel-whitelist">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- .page-content -->
+<!-- ══ Sheet Prompt Modal (shown after exam creation) ══ -->
+<div id="modal-sheet-prompt" class="modal-overlay hidden">
+  <div class="modal" style="max-width:480px; text-align:center;">
+    <div style="font-size:3rem; margin-bottom:0.75rem;">📊</div>
+    <h2 style="margin-bottom:0.5rem; font-size:1.1rem; color:#f1f5f9;">Exam Created!</h2>
+    <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:0.25rem;">
+      Your exam code is: <strong id="sheet-prompt-code" style="color:#60a5fa; font-size:1rem;"></strong>
+    </p>
+    <p style="color:#94a3b8; font-size:0.9rem; line-height:1.6; margin-bottom:1.5rem;">
+      Please check the <strong style="color:#34d399;">Google Sheet</strong> to create the questionnaire.<br>
+      Add your questions in columns A–E of the exam tab named after your exam code.
+    </p>
+    <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+      <button id="btn-open-sheet" class="btn btn-primary" style="display:flex;align-items:center;gap:0.5rem;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        Open Google Sheet
+      </button>
+      <button id="btn-close-sheet-prompt" class="btn btn-ghost">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Edit Exam Modal ══ -->
+<div id="modal-edit-exam" class="modal-overlay hidden">
+  <div class="modal cem-modal" style="max-width:480px;padding:0;overflow:hidden;">
+    <div class="cem-header">
+      <div class="cem-header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </div>
+      <div>
+        <h2 class="cem-title">Edit Exam</h2>
+        <p class="cem-sub">Modify exam settings</p>
+      </div>
+    </div>
+    <div class="cem-body">
+      <input type="hidden" id="edit-exam-id" />
+      <div class="cem-field">
+        <label class="cem-label">Title <span class="cem-required">required</span></label>
+        <input id="edit-exam-title" type="text" class="cem-input" placeholder="Exam title / access code" />
+      </div>
+      <div class="cem-field">
+        <label class="cem-label">Description <span class="cem-optional">optional</span></label>
+        <textarea id="edit-exam-desc" class="cem-input cem-textarea" rows="2" placeholder="Brief description of this exam"></textarea>
+      </div>
+      <div class="cem-time-row">
+        <div class="cem-field">
+          <label class="cem-label">Start Time</label>
+          <input id="edit-exam-start" type="datetime-local" class="cem-input" />
+        </div>
+        <div class="cem-time-divider">→</div>
+        <div class="cem-field">
+          <label class="cem-label">End Time</label>
+          <input id="edit-exam-end" type="datetime-local" class="cem-input" />
+        </div>
+      </div>
+    </div>
+    <div class="cem-footer">
+      <button class="btn btn-ghost cem-cancel" id="btn-cancel-edit">Cancel</button>
+      <button class="btn btn-primary cem-submit" id="btn-save-edit">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script src="../styles/carousel.js"></script>
+<script src="../js/config.js"></script>
+<script src="../js/dashboard.js"></script>
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+<script>
+  // Carousel
+  let _cs=0; const _csl=document.querySelectorAll('.carousel-slide');
+  if(_csl.length) setInterval(()=>{
+    _csl[_cs].classList.remove('active');
+    _cs=(_cs+1)%_csl.length;
+    _csl[_cs].classList.add('active');
+  },6000);
+  // Theme
+  document.getElementById('themeToggle')?.addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme')||'dark';
+    const nxt=cur==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',nxt);
+    localStorage.setItem('proctool-theme',nxt);
+  });
+</script>
+</body>
+</html>

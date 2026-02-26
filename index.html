@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>I.T Proctool – Online Exam Portal</title>
+  <link rel="stylesheet" href="styles/theme.css">
+  <link rel="stylesheet" href="styles/carousel.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <script>(function(){ const t=localStorage.getItem('proctool-theme')||'dark'; document.documentElement.setAttribute('data-theme',t); })();</script>
+  <script>
+    // ── Block right-click context menu ────────────────────────────────────────
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+
+    // ── Block DevTools keyboard shortcuts ─────────────────────────────────────
+    document.addEventListener('keydown', function(e) {
+      // F12
+      if (e.key === 'F12') { e.preventDefault(); return false; }
+      // Ctrl+Shift+I / Cmd+Opt+I (Inspect)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); return false; }
+      // Ctrl+Shift+J / Cmd+Opt+J (Console)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.key === 'j')) { e.preventDefault(); return false; }
+      // Ctrl+Shift+C / Cmd+Opt+C (Inspector picker)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
+      // Ctrl+U (View source)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) { e.preventDefault(); return false; }
+      // Ctrl+S (Save page
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) { e.preventDefault(); return false; }
+      // Ctrl+P (Print)
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'P' || e.key === 'p')) { e.preventDefault(); return false; }
+    });
+
+    // ── Block scroll (mouse wheel + touch + keyboard scroll keys) ─────────────
+    document.addEventListener('wheel', function(e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('keydown', function(e) {
+      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','PageUp','PageDown','Home','End',' '].includes(e.key)) {
+        if (!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) {
+          e.preventDefault();
+        }
+      }
+    });
+  </script>
+  <style>
+    /* ── Viewport fit: everything in 100vh, no page scroll ── */
+    html, body {
+      height: 100%; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* ── Nav: compact ── */
+    .top-nav {
+      flex-shrink: 0;
+      position: relative; z-index: 50;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.6rem 1.75rem;
+      background: rgba(8,14,28,0.7);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+    [data-theme="light"] .top-nav { background: rgba(248,250,253,0.85); }
+
+    .nav-logo { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--text-primary); }
+    .nav-logo-icon {
+      width: 32px; height: 32px;
+      background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.35);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent-light);
+    }
+    .nav-logo-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-logo-name { font-family: 'Sora', sans-serif; font-size: 1.05rem; font-weight: 700; letter-spacing: 0.04em; }
+    .nav-right { display: flex; align-items: center; gap: 0.65rem; }
+    .nav-badge {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      padding: 0.35rem 0.85rem; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 9999px; font-size: 0.74rem; font-weight: 600;
+      color: var(--text-secondary); backdrop-filter: blur(8px);
+    }
+    .nav-badge svg { width: 13px; height: 13px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Main: two-column, fills remaining height ── */
+    .hero-main {
+      flex: 1; display: flex; align-items: stretch;
+      max-width: 1180px; margin: 0 auto; width: 100%;
+      padding: 1.25rem 2rem; gap: 3rem;
+      min-height: 0; /* critical: allow flex child to shrink */
+    }
+
+    /* ── Left column: vertically centered, no overflow ── */
+    .hero-left {
+      flex: 1.1; min-width: 0;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 0.45rem;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25);
+      border-radius: 9999px; padding: 0.25rem 0.8rem;
+      font-size: 0.68rem; font-weight: 700; color: var(--accent-light);
+      letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.75rem;
+      width: fit-content;
+    }
+    .hero-title {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.9rem, 3.5vw, 2.8rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -0.02em; color: var(--text-primary); margin-bottom: 0.6rem;
+    }
+    .hero-subtitle {
+      font-size: 0.875rem; color: var(--text-secondary); line-height: 1.65;
+      max-width: 420px; margin-bottom: 1.25rem;
+    }
+
+    /* ── Feature cards: horizontal row to save vertical space ── */
+    .feature-cards { display: flex; flex-direction: column; gap: 0.5rem; }
+    .feature-card {
+      display: flex; align-items: center; gap: 0.85rem;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.7rem 1rem;
+      backdrop-filter: blur(12px); transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .feature-card:hover { border-color: rgba(59,130,246,0.45); box-shadow: var(--shadow-sm); transform: translateX(3px); }
+    .feature-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--accent-light);
+    }
+    .feature-icon svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .feature-text h4 { font-weight: 700; font-size: 0.82rem; color: var(--text-primary); margin-bottom: 0.1rem; }
+    .feature-text p { font-size: 0.73rem; color: var(--text-muted); line-height: 1.4; margin: 0; }
+
+    /* ── Right column: portal card, scrollable internally if needed ── */
+    .hero-right {
+      flex: 0 0 390px; width: 390px;
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .portal-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 1.5rem;
+      backdrop-filter: blur(20px); box-shadow: var(--shadow-md);
+      overflow-y: auto; /* allow internal scroll only if truly needed */
+      max-height: 100%;
+    }
+    .portal-card-title {
+      font-family: 'Sora', sans-serif; text-align: center;
+      font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.2rem;
+    }
+    .portal-card-sub { text-align: center; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 1rem; }
+
+    .role-toggle {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0.3rem;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 11px; padding: 0.25rem; margin-bottom: 1rem;
+    }
+    .role-btn {
+      display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+      padding: 0.55rem 1rem; border: none; border-radius: 8px;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      background: transparent; color: var(--text-muted); font-family: 'DM Sans', sans-serif;
+    }
+    .role-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .role-btn.active { background: var(--accent); color: #fff; box-shadow: 0 4px 12px var(--accent-glow); }
+    .role-btn:not(.active):hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+    .portal-pane { display: none; }
+    .portal-pane.active { display: block; }
+
+    /* ── Student ready banner: compact horizontal ── */
+    .student-ready {
+      display: flex; align-items: center; gap: 0.85rem;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 0.9rem;
+    }
+    .student-ready-icon {
+      width: 44px; height: 44px; flex-shrink: 0;
+      background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--accent);
+    }
+    .student-ready-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .student-ready-text h3 { font-weight: 700; font-size: 0.88rem; color: var(--text-primary); margin-bottom: 0.1rem; }
+    .student-ready-text p { font-size: 0.74rem; color: var(--text-muted); margin: 0; }
+
+    .form-label-pt { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.28rem; }
+    .input-pt {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 9px; color: var(--text-primary); padding: 0.55rem 0.85rem;
+      font-size: 0.875rem; font-family: 'DM Sans', sans-serif; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s; box-sizing: border-box;
+    }
+    .input-pt:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    .input-pt::placeholder { color: var(--text-muted); }
+    .form-row { margin-bottom: 0.65rem; }
+    .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.65rem; }
+
+    .btn-pt-primary {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.45rem;
+      padding: 0.72rem 1.25rem; background: var(--accent); color: #fff;
+      border: none; border-radius: 10px; font-size: 0.9rem; font-weight: 700;
+      font-family: 'DM Sans', sans-serif; letter-spacing: 0.02em; cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 16px var(--accent-glow); margin-top: 0.25rem;
+    }
+    .btn-pt-primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
+    .btn-pt-primary:active { transform: translateY(0); }
+    .btn-pt-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-pt-primary svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* ── Footer: compact ── */
+    footer {
+      flex-shrink: 0;
+      text-align: center; padding: 0.6rem 2rem; font-size: 0.72rem;
+      color: var(--text-muted); border-top: 1px solid var(--border);
+      background: rgba(8,14,28,0.5); backdrop-filter: blur(8px);
+    }
+    [data-theme="light"] footer { background: rgba(248,250,253,0.7); }
+
+    /* ── Toast ── */
+    #toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast-msg { padding: 0.65rem 1.1rem; border-radius: 9px; font-weight: 500; font-size: 0.84rem; box-shadow: var(--shadow-md); animation: slideIn 0.25s ease; min-width: 220px; max-width: 340px; border-left: 4px solid; }
+    .toast-success { background: var(--bg-card); color: #34d399; border-color: #10b981; }
+    .toast-error   { background: var(--bg-card); color: #f87171; border-color: #ef4444; }
+    .toast-info    { background: var(--bg-card); color: var(--accent-light); border-color: var(--accent); }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+    /* ── Loading spinner ── */
+    .loading-spinner { text-align: center; padding: 1rem 0; }
+    .loader { margin: 0 auto; height: 40px; aspect-ratio: 2; border-bottom: 3px solid transparent; background: linear-gradient(90deg, var(--accent) 50%, transparent 0) -25% 100% / 50% 3px repeat-x border-box; position: relative; animation: l3-0 0.75s linear infinite; }
+    .loader::before { content: ""; position: absolute; inset: auto 42.5% 0; aspect-ratio: 1; border-radius: 50%; background: var(--accent); animation: l3-1 0.75s cubic-bezier(0, 900, 1, 900) infinite; }
+    @keyframes l3-0 { to { background-position: -125% 100%; } }
+    @keyframes l3-1 { 0%,2% { bottom:0%; } 98%,to { bottom:0.1%; } }
+    .loading-spinner p { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; }
+
+    /* ── Modals ── */
+    .modal-content, .modal-content-custom { background: var(--bg-surface) !important; border: 1px solid var(--border) !important; border-radius: 16px !important; color: var(--text-primary) !important; }
+    .modal-header, .modal-header-custom { border-bottom: 1px solid var(--border) !important; background: transparent !important; color: var(--text-primary) !important; }
+    .modal-body, .modal-body-custom { color: var(--text-primary) !important; }
+    .modal-footer { border-top: 1px solid var(--border) !important; background: transparent !important; }
+    .modal-header .btn-close { filter: invert(1) brightness(0.7); }
+    [data-theme="light"] .modal-header .btn-close { filter: none; }
+
+    /* ── User select ── */
+    body, body * { user-select: none; -webkit-user-select: none; }
+    input, textarea, select { user-select: text; -webkit-user-select: text; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+
+<div class="carousel-bg">
+  <div class="carousel-slide active" style="background-image:url('photo1.jpg');"></div>
+  <div class="carousel-slide" style="background-image:url('photo2.jpg');"></div>
+  <div class="carousel-slide" style="background-image:url('photo3.jpg');"></div>
+</div>
+<div class="carousel-overlay"></div>
+
+<div class="page-content">
+<nav class="top-nav">
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <span class="nav-logo-name">I.T PROCTOOL</span>
+  </a>
+  <div class="nav-right">
+    <div class="nav-badge">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Secure Online Exam System
+    </div>
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
+  </div>
+</nav>
+
+<main class="hero-main">
+  <div class="hero-left">
+    <div class="hero-eyebrow">
+      <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Online Examination Platform
+    </div>
+    <h1 class="hero-title">Welcome to<br>I.T Proctool</h1>
+    <p class="hero-subtitle">Advanced exam proctoring with real-time detection, ensuring academic integrity through state-of-the-art security.</p>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/></svg></div>
+        <div class="feature-text"><h4>Activity log</h4><p>Intelligent tracking of suspicious behavior and focus loss during examinations.</p></div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="feature-text"><h4>Highly Secure</h4><p>Strict enforcement against tab switching, copy-pasting, and external shortcuts.</p></div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <div class="feature-text"><h4>Direct Access</h4><p>Frictionless 1-click entry for students without complicated login processes.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="portal-card">
+      <h2 class="portal-card-title">Access Portal</h2>
+      <p class="portal-card-sub">Select your role to continue</p>
+      <div class="role-toggle">
+        <button class="role-btn active" data-role="student">
+          <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Student
+        </button>
+        <button class="role-btn" data-role="teacher">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Teacher
+        </button>
+      </div>
+
+      <div class="portal-pane active" id="pane-student">
+        <div class="student-ready">
+          <div class="student-ready-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          </div>
+          <div class="student-ready-text">
+            <h3>Ready to take your exam?</h3>
+            <p>Make sure you are in a quiet environment.</p>
+          </div>
+        </div>
+        <div class="form-row-2">
+          <div><label class="form-label-pt">Last Name</label><input type="text" class="input-pt" id="lastName" placeholder="Dela Cruz" autocomplete="off"></div>
+          <div><label class="form-label-pt">First Name</label><input type="text" class="input-pt" id="firstName" placeholder="Juan" autocomplete="off"></div>
+        </div>
+        <div class="form-row-2">
+          <div><label class="form-label-pt">Section</label><input type="text" class="input-pt" id="section" placeholder="BSIT-2A" autocomplete="off"></div>
+          <div><label class="form-label-pt">Test Code</label><input type="text" class="input-pt" id="code" placeholder="QUIZ001" autocomplete="off"></div>
+        </div>
+        <!-- Honeypot field for bot detection — hidden from humans -->
+        <div style="position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none;" aria-hidden="true">
+          <input type="text" id="hp_email" name="hp_email" tabindex="-1" autocomplete="off">
+        </div>
+        <button class="btn-pt-primary" id="startBtn">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Proceed to Exam Room
+        </button>
+        <div class="loading-spinner" id="startLoadingSpinner" style="display:none;">
+          <div class="loader"></div>
+          <p>Initializing exam environment...</p>
+        </div>
+      </div>
+
+      <div class="portal-pane" id="pane-teacher">
+        <div class="form-row">
+          <label class="form-label-pt">Email Address</label>
+          <input type="email" class="input-pt" id="teacherEmail" placeholder="your@email.com" autocomplete="off">
+        </div>
+        <div class="form-row">
+          <label class="form-label-pt">Password</label>
+          <input type="password" class="input-pt" id="teacherPassword" placeholder="••••••••">
+        </div>
+        <button class="btn-pt-primary" id="btn-teacher-login">
+          <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Access Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>Proverbs 16:28 — A fraudulent man sows strife, and a whisperer separates chief friends.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Carousel
+  let _slide=0; const _slides=document.querySelectorAll('.carousel-slide');
+  if(_slides.length) setInterval(()=>{ _slides[_slide].classList.remove('active'); _slide=(_slide+1)%_slides.length; _slides[_slide].classList.add('active'); },6000);
+
+  document.querySelectorAll('.role-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+      document.querySelectorAll('.portal-pane').forEach(p=>p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('pane-'+btn.dataset.role).classList.add('active');
+    });
+  });
+
+  // Theme toggle
+  document.getElementById('themeToggle').addEventListener('click',()=>{
+    const cur=document.documentElement.getAttribute('data-theme')||'dark';
+    const next=cur==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    localStorage.setItem('proctool-theme',next);
+  });
+
+  // Toast
+  function toast(msg,type='info'){
+    const el=document.createElement('div'); el.className='toast-msg toast-'+type; el.textContent=msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(()=>el.remove(),3500);
+  }
+
+  // Google Sheets URL
+  window.ANSWER_API_URL='https://script.google.com/macros/s/AKfycbyWXdbP6hdjKSGdtBMcrVTogwUokmLscK26e__nd3c10jtsiCsu4yavFDOvciAwbQH0MQ/exec';
+</script>
+
+</div><!-- .page-content -->
+
+<!-- Modals — placed outside .page-content to avoid stacking context issues -->
+<div class="modal fade" id="instructionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content modal-content-custom">
+      <div class="modal-header modal-header-custom"><h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Exam Instructions</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body modal-body-custom">
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:1rem;">
+          <h6 style="color:var(--danger);margin-bottom:0.75rem;"><i class="bi bi-shield-exclamation me-2"></i>Security &amp; Conduct Policy</h6>
+          <ul style="margin:0;padding-left:1.25rem;font-size:0.875rem;color:var(--text-secondary);">
+            <li><strong>Fullscreen mode is mandatory</strong> — exiting counts as a violation</li>
+            <li>No tab switching or window minimizing during the exam</li>
+            <li>No screenshots, screen recording, or external devices</li>
+            <li>No copying, pasting, or external resources</li>
+            <li>Use the Skip button when needed</li>
+            <li>Exam auto-submits after 3 violations</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-secondary" id="cancelStart" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="agreeBtn">I Understand — Start Exam</button></div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="duplicateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content modal-content-custom"><div class="modal-header modal-header-custom"><h5 class="modal-title"><i class="bi bi-exclamation-circle-fill me-2" style="color:var(--danger);"></i>Duplicate Entry</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body modal-body-custom text-center"><p id="duplicateText">A student with this name and section has already taken this exam. Please contact your instructor.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button></div></div></div>
+</div>
+<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content modal-content-custom"><div class="modal-header modal-header-custom"><h5 class="modal-title"><i class="bi bi-exclamation-diamond-fill me-2" style="color:var(--danger);"></i>Error</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body modal-body-custom"><div id="errorText" style="padding:0.75rem;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);color:var(--danger);"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" id="errorOk" data-bs-dismiss="modal">OK</button></div></div></div>
+</div>
+<div class="modal fade" id="noInternetModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content modal-content-custom"><div class="modal-header modal-header-custom"><h5 class="modal-title"><i class="bi bi-wifi-off me-2"></i>Connection Required</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body modal-body-custom text-center"><p id="noInternetText">No stable internet connection detected. Please check and try again.</p></div><div class="modal-footer"><button type="button" class="btn btn-primary" id="retryOnline">Retry Connection</button></div></div></div>
+</div>
+
+<script src="scripts/login.js"></script>
+
+<script>
+  window.PHP_API_BASE=window.location.origin+window.location.pathname.replace(/\/[^\/]*$/,'')+'/api';
+  const btnTeacherLogin=document.getElementById('btn-teacher-login');
+  async function doTeacherLogin(){
+    const email=document.getElementById('teacherEmail').value.trim();
+    const password=document.getElementById('teacherPassword').value;
+    if(!email||!password){toast('Please enter both email and password','error');return;}
+    btnTeacherLogin.disabled=true;
+    btnTeacherLogin.innerHTML='Authenticating...';
+    try{
+      const res=await fetch(window.PHP_API_BASE+'/auth_teacher.php',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+      const data=await res.json();
+      if(data.success){
+        localStorage.setItem('userRole','teacher');
+        localStorage.setItem('teacherData',JSON.stringify(data.teacher));
+        toast('Login successful! Redirecting...','success');
+        setTimeout(()=>{window.location.href='teacher/dashboard.html';},700);
+      }else{toast(data.message||'Invalid credentials','error');}
+    }catch(e){toast('Connection error. Is the server running?','error');}
+    finally{
+      btnTeacherLogin.disabled=false;
+      btnTeacherLogin.innerHTML='<svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Access Dashboard';
+    }
+  }
+  btnTeacherLogin.addEventListener('click',doTeacherLogin);
+  document.getElementById('teacherPassword').addEventListener('keydown',e=>e.key==='Enter'&&doTeacherLogin());
+</script>
+
+<script src="styles/carousel.js"></script>
+</body>
+</html>
