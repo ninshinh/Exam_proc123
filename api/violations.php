@@ -93,21 +93,27 @@ if ($method === 'POST') {
     $examSessionId = null;
     if ($rawSessionId) {
         $rawSessionId = (int)$rawSessionId;
+        
         $chk = $db->prepare("SELECT e.status FROM exam_sessions es JOIN exams e ON es.exam_id = e.id WHERE es.id = ?");
         $chk->execute([$rawSessionId]);
         $row = $chk->fetch();
+        
         if ($row) {
             if ($row['status'] !== 'active') {
                 jsonResponse(['success' => false, 'message' => 'Exam is not active', 'blocked' => true]);
             }
-            $examSessionId = $rawSessionId;
+            $examSessionId = $rawSessionId; // This is fine for real DB sessions
         } else {
             try {
                 $gsChk = $db->prepare("SELECT id FROM gs_exam_sessions WHERE id = ?");
                 $gsChk->execute([$rawSessionId]);
                 if ($gsChk->fetch()) {
-                    $db->prepare("UPDATE gs_exam_sessions SET last_seen = NOW() WHERE id = ?")->execute([$rawSessionId]);
-                    $examSessionId = $rawSessionId;
+                    // Update the heartbeat so they show as "Active" on dashboard
+                    $db->prepare("UPDATE gs_exam_sessions SET last_seen = NOW() WHERE id = ?")
+                       ->execute([$rawSessionId]);
+                    
+                    // FIX: Set to null so the Foreign Key doesn't crash the INSERT
+                    $examSessionId = null; 
                 }
             } catch (Exception $e) {}
         }
