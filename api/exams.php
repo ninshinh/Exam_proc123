@@ -103,7 +103,7 @@ if ($method === 'GET') {
     // Public status check by code (used on exam entry page)
     if (isset($_GET['examStatusByCode'])) {
         $code = sanitizeStr($_GET['examStatusByCode'] ?? '', 50);
-        $stmt = $db->prepare("SELECT id, status, start_time, end_time FROM exams WHERE unique_id = ?");
+        $stmt = $db->prepare("SELECT id, status, start_time, end_time, is_manually_stopped FROM exams WHERE unique_id = ?");
         $stmt->execute([strtoupper($code)]);
         $row = $stmt->fetch();
 
@@ -150,7 +150,7 @@ if ($method === 'GET') {
 
     if (isset($_GET['examStatusCheck'])) {
         $examId = (int)$_GET['examStatusCheck'];
-        $stmt = $db->prepare("SELECT id, status, start_time, end_time FROM exams WHERE id = ?");
+        $stmt = $db->prepare("SELECT id, status, start_time, end_time, is_manually_stopped FROM exams WHERE id = ?");
         $stmt->execute([$examId]);
         $row = $stmt->fetch();
         if (!$row) { jsonResponse(['status' => 'not_found'], 404); }
@@ -268,7 +268,7 @@ if ($method === 'PATCH') {
     // ── Status change ─────────────────────────────────────────────────────────
     $status = $b['status'] ?? null;
     $valid  = ['draft', 'active', 'completed', 'cancelled', 'reopened'];
-    if (!in_array($status, $valid)) jsonResponse(['success' => false, 'message' => 'Invalid status'], 400);
+    if (!in_array($status, $valid)) { jsonResponse(['success' => false, 'message' => 'Invalid status'], 400);
     
     // If teacher sets to draft, set is_manually_stopped to 1
     // If teacher sets to active/reopen, set is_manually_stopped to 0
@@ -280,6 +280,8 @@ if ($method === 'PATCH') {
     if (in_array($status, ['draft', 'completed', 'cancelled'])) {
         $db->prepare("UPDATE exam_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP WHERE exam_id = ? AND status = 'active'")
            ->execute([$examId]);
+    }
+    jsonResponse(['success' => true, 'message' => 'Status updated']);
     }
 
     $msgs = [
