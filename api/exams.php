@@ -269,8 +269,13 @@ if ($method === 'PATCH') {
     $status = $b['status'] ?? null;
     $valid  = ['draft', 'active', 'completed', 'cancelled', 'reopened'];
     if (!in_array($status, $valid)) jsonResponse(['success' => false, 'message' => 'Invalid status'], 400);
+    
+    // If teacher sets to draft, set is_manually_stopped to 1
+    // If teacher sets to active/reopen, set is_manually_stopped to 0
+    $manuallyStopped = ($status === 'draft') ? 1 : 0;
 
-    $db->prepare("UPDATE exams SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")->execute([$status, $examId]);
+    $db->prepare("UPDATE exams SET status = ?, is_manually_stopped = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+       ->execute([$status, $manuallyStopped, $examId]);
 
     if (in_array($status, ['draft', 'completed', 'cancelled'])) {
         $db->prepare("UPDATE exam_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP WHERE exam_id = ? AND status = 'active'")
