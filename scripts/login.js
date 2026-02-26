@@ -162,12 +162,12 @@ if (startBtn) {
       }
 
       // ── Step 4: Honeypot anti-bot check ──────────────────────────────────
-      const honeypot = document.getElementById('hp_email');
+      /* const honeypot = document.getElementById('hp_email');
       if (honeypot && honeypot.value !== '') {
         showError(`<strong>⚠️ Access Denied</strong><br>Automated submissions are not permitted. You will be redirected.`);
         setTimeout(() => { window.location.href = 'index.html'; }, 2500);
         return;
-      }
+      } */ // we will implement this in the future if bot traffic becomes an issue, but for now it causes more false positives than benefits
 
       // ── Step 5: Show instructions ─────────────────────────────────────────
       const instructionsText = document.getElementById('instructionsText');
