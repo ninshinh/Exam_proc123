@@ -33,15 +33,9 @@ $db->exec("CREATE TABLE IF NOT EXISTS gs_exam_sessions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
 // ── Helper: convert UTC datetime string → Asia/Manila ────────────────────────
+// Simplify this in exam_sessions.php
 function toUtc8(?string $dt): ?string {
-    if (!$dt) return null;
-    try {
-        $d = new DateTime($dt, new DateTimeZone('UTC'));
-        $d->setTimezone(new DateTimeZone('Asia/Manila'));
-        return $d->format('Y-m-d H:i:s');
-    } catch (Exception $e) {
-        return $dt;
-    }
+    return $dt; // Just return the time because it's already in PHT (+08:00)
 }
 
 // ---- GET ----

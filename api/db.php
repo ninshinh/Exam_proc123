@@ -38,8 +38,8 @@ function getDB() {
             // ── Timezone pinning ─────────────────────────────────────────────
             // Pin both PHP and MySQL to UTC so all datetime math is consistent.
             // toUtc8() in exam_sessions.php explicitly converts UTC → Asia/Manila.
-            date_default_timezone_set('UTC');
-            $pdo->exec("SET time_zone = '+00:00'");
+            date_default_timezone_set('Asia/Manila'); // Pin PHP to PHT
+            $pdo->exec("SET time_zone = '+08:00'"); // Pin MySQL to PHT (UTC+8)
         } catch (PDOException $e) {
             http_response_code(500);
             // FIX #1: Never expose raw DB error to client (was leaking $e->getMessage())
