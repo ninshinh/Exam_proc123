@@ -85,11 +85,14 @@ function autoEnforceSchedule(PDO $db, array $exam): array {
            ->execute([$exam['id']]);
         $exam['status'] = 'completed';
     }
-    // If draft but within window → auto-activate
+// 2. Modified Auto-activate: Only if NOT manually stopped
     if ($exam['status'] === 'draft' && $start && $end && $now >= $start && $now <= $end) {
-        $db->prepare("UPDATE exams SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-           ->execute([$exam['id']]);
-        $exam['status'] = 'active';
+        // Only auto-activate if the teacher hasn't manually killed it
+        if (!isset($exam['is_manually_stopped']) || $exam['is_manually_stopped'] == 0) {
+            $db->prepare("UPDATE exams SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+               ->execute([$exam['id']]);
+            $exam['status'] = 'active';
+        }
     }
     return $exam;
 }
