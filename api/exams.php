@@ -71,24 +71,24 @@ function isScheduleBlocked(array $exam): bool {
     return false;
 }
 
+// ── Helper: auto-enforce schedule, deactivate/activate based on PHT time ─────
 function autoEnforceSchedule(PDO $db, array $exam): array {
     $now   = nowPHT();
     $start = toPHTTimestamp($exam['start_time']);
     $end   = toPHTTimestamp($exam['end_time']);
 
-    // 1. Auto-complete (Past end time)
+    // If active/reopened but past end → auto-complete
     if (($exam['status'] === 'active' || $exam['status'] === 'reopened') && $end && $now > $end) {
         $db->prepare("UPDATE exams SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
            ->execute([$exam['id']]);
+        $db->prepare("UPDATE exam_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP WHERE exam_id = ? AND status = 'active'")
+           ->execute([$exam['id']]);
         $exam['status'] = 'completed';
     }
-    
-    // 2. SMART Auto-activate: Only if NOT manually stopped by teacher
+// 2. Modified Auto-activate: Only if NOT manually stopped
     if ($exam['status'] === 'draft' && $start && $end && $now >= $start && $now <= $end) {
-        // Fetch is_manually_stopped if it wasn't in the original array
-        $isStopped = $exam['is_manually_stopped'] ?? 0;
-        
-        if ($isStopped == 0) {
+        // Only auto-activate if the teacher hasn't manually killed it
+        if (!isset($exam['is_manually_stopped']) || $exam['is_manually_stopped'] == 0) {
             $db->prepare("UPDATE exams SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
                ->execute([$exam['id']]);
             $exam['status'] = 'active';
@@ -103,7 +103,7 @@ if ($method === 'GET') {
     // Public status check by code (used on exam entry page)
     if (isset($_GET['examStatusByCode'])) {
         $code = sanitizeStr($_GET['examStatusByCode'] ?? '', 50);
-        $stmt = $db->prepare("SELECT id, status, start_time, end_time, is_manually_stopped FROM exams WHERE unique_id = ?");
+        $stmt = $db->prepare("SELECT id, status, start_time, end_time FROM exams WHERE unique_id = ?");
         $stmt->execute([strtoupper($code)]);
         $row = $stmt->fetch();
 
@@ -150,7 +150,7 @@ if ($method === 'GET') {
 
     if (isset($_GET['examStatusCheck'])) {
         $examId = (int)$_GET['examStatusCheck'];
-        $stmt = $db->prepare("SELECT id, status, start_time, end_time, is_manually_stopped FROM exams WHERE id = ?");
+        $stmt = $db->prepare("SELECT id, status, start_time, end_time FROM exams WHERE id = ?");
         $stmt->execute([$examId]);
         $row = $stmt->fetch();
         if (!$row) { jsonResponse(['status' => 'not_found'], 404); }
@@ -268,20 +268,17 @@ if ($method === 'PATCH') {
     // ── Status change ─────────────────────────────────────────────────────────
     $status = $b['status'] ?? null;
     $valid  = ['draft', 'active', 'completed', 'cancelled', 'reopened'];
-    if (!in_array($status, $valid)) { jsonResponse(['success' => false, 'message' => 'Invalid status'], 400);
+    if (!in_array($status, $valid)) jsonResponse(['success' => false, 'message' => 'Invalid status'], 400);
     
     // If teacher sets to draft, set is_manually_stopped to 1
     // If teacher sets to active/reopen, set is_manually_stopped to 0
     $manuallyStopped = ($status === 'draft') ? 1 : 0;
 
-    $db->prepare("UPDATE exams SET status = ?, is_manually_stopped = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-       ->execute([$status, $manuallyStopped, $examId]);
+    $db->prepare("UPDATE exams SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")->execute([$status, $examId]);
 
     if (in_array($status, ['draft', 'completed', 'cancelled'])) {
         $db->prepare("UPDATE exam_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP WHERE exam_id = ? AND status = 'active'")
            ->execute([$examId]);
-    }
-    jsonResponse(['success' => true, 'message' => 'Status updated']);
     }
 
     $msgs = [
