@@ -58,11 +58,29 @@ function highlightEmpty(fieldId) {
   }, { once: true });
 }
 
+/**
+ * Checks if the user is on a mobile/tablet device.
+ * Returns true if the device is NOT a mobile/tablet.
+ */
+function isDesktop() {
+  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+  
+  // Regex to detect common mobile/tablet keywords
+  const isMobile = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+  
+  return !isMobile;
+}
+
 // ── BEGIN EXAM ────────────────────────────────────────────────────────────────
 const startBtn = document.getElementById('startBtn');
 
 if (startBtn) {
   startBtn.addEventListener('click', async (e) => {
+    if (!isDesktop()) {
+      e.preventDefault();
+      showError('<strong>Access Restricted</strong><br>This exam can only be taken on a Desktop or Laptop computer. Mobile devices are not allowed.');
+      return;
+    }
     e.preventDefault();
 
     const lastName  = (document.getElementById('lastName')?.value  || '').trim();
