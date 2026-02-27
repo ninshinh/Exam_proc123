@@ -103,7 +103,7 @@ if ($method === 'GET') {
     // Public status check by code (used on exam entry page)
     if (isset($_GET['examStatusByCode'])) {
         $code = sanitizeStr($_GET['examStatusByCode'] ?? '', 50);
-        $stmt = $db->prepare("SELECT id, status, start_time, end_time FROM exams WHERE unique_id = ?");
+        $stmt = $db->prepare("SELECT id, status, start_time, end_time, is_manually_stopped FROM exams WHERE unique_id = ?");
         $stmt->execute([strtoupper($code)]);
         $row = $stmt->fetch();
 
@@ -150,12 +150,12 @@ if ($method === 'GET') {
 
     if (isset($_GET['examStatusCheck'])) {
         $examId = (int)$_GET['examStatusCheck'];
-        $stmt = $db->prepare("SELECT id, status, start_time, end_time FROM exams WHERE id = ?");
+        $stmt = $db->prepare("SELECT id, status, start_time, end_time, is_manually_stopped FROM exams WHERE id = ?");
         $stmt->execute([$examId]);
         $row = $stmt->fetch();
         if (!$row) { jsonResponse(['status' => 'not_found'], 404); }
         $row = autoEnforceSchedule($db, $row);
-        jsonResponse(['status' => $row['status']]);
+        jsonResponse(['status' => $row['status'], 'isManuallyStopped' => $row['is_manually_stopped']]);
     }
 
     $teacherId = isset($_GET['teacherId']) ? (int)$_GET['teacherId'] : null;
@@ -274,7 +274,8 @@ if ($method === 'PATCH') {
     // If teacher sets to active/reopen, set is_manually_stopped to 0
     $manuallyStopped = ($status === 'draft') ? 1 : 0;
 
-    $db->prepare("UPDATE exams SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")->execute([$status, $examId]);
+    $db->prepare("UPDATE exams SET status = ?, is_manually_stopped = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+       ->execute([$status, $manuallyStopped, $examId]);
 
     if (in_array($status, ['draft', 'completed', 'cancelled'])) {
         $db->prepare("UPDATE exam_sessions SET status = 'completed', end_time = CURRENT_TIMESTAMP WHERE exam_id = ? AND status = 'active'")
